@@ -8,21 +8,25 @@ Esta é a API de uma livraria, desenvolvida em Node.js, que permite o gerenciame
 
 ```bash
 bookstore/
-├── controllers/
-│   ├── authController.js
-│   ├── bookController.js
-│   └── userController.js
-├── middleware/
-│   └── authMiddleware.js
-├── models/
-│   ├── book.js
-│   └── user.js
-├── routes/
-│   ├── auth.js
-│   ├── books.js
-│   └── user.js
+├── src/
+│    ├── config/
+│    │   └── database.js
+│    ├── controllers/
+│    │   ├── authController.js
+│    │   ├── bookController.js
+│    │   └── userController.js
+│    ├── middleware/
+│    │   ├── validators.js
+│    │   └── authMiddleware.js
+│    ├── models/
+│    │   ├── book.js
+│    │   └── user.js
+│    └── routes/
+│    │   ├── auth.js
+│    │   ├── books.js
+│    │   └── user.js
+│    └── app.js
 ├── .env
-├── app.js
 ├── package.json
 └── README.md
 ```
@@ -35,3 +39,33 @@ bookstore/
 - Bcrypt
 - Express Validator
 
+## Configuração Inicial
+
+#### 1. Clone o repositório:
+
+```bash
+git clone https://github.com/seu-usuario/bookstore.git
+cd bookstore
+```
+
+#### 2. Instale as dependências:
+
+```bash
+npm install
+```
+
+#### 3. Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+
+```bash
+PORT=3000
+MONGO_URI=mongodb://localhost:27017/bookstore
+JWT_SECRET=seu_segredo_jwt
+```
+
+#### 4. Inicie o servidor:
+
+```bash
+npm start
+```
+**Que a força esteja com você**
+<img src="./docs/images/luke.png" alt="luke skywalker emoji" width="30" height="30">

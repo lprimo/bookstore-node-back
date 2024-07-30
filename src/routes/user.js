@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const UserController = require('../controllers/userController');
-const { authMiddleware, adminMiddleware } = require('../middleware/auth');
-const { validateUser } = require('../middleware/validators');
+const { authMiddleware, adminMiddleware } = require('../middleware/authMiddleware');
+const { validateUser } = require('../utils/validators');
 
 // Register a new user (protected route, admin only)
 router.post('/register', authMiddleware, adminMiddleware, validateUser, UserController.registerUser);

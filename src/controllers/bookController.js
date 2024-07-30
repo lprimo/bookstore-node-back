@@ -37,14 +37,14 @@ exports.updateBook = async (req, res) => {
             return res.status(404).json({ message: 'Book not found' });
         }
 
-        book.title = title || book.title;
-        book.author = author || book.author;
-        book.isbn = isbn || book.isbn;
-        book.publishedDate = publishedDate || book.publishedDate;
-        book.pages = pages || book.pages;
+        if (title) book.title = title;
+        if (author) book.author = author;
+        if (isbn) book.isbn = isbn;
+        if (publishedDate) book.publishedDate = publishedDate;
+        if (pages) book.pages = pages;
 
-        const updatedBook = await book.save();
-        res.json(updatedBook);
+        await book.save();
+        res.json(book);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -86,6 +86,28 @@ exports.getBooksByAuthor = async (req, res) => {
         if (!books.length) {
             return res.status(404).json({ message: 'No books found with the given author' });
         }
+        res.json(books);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.filterBooksByDate = async (req, res) => {
+    const { startDate, endDate } = req.query;
+
+    try {
+        const query = {};
+
+        if (startDate) {
+            query.publishedDate = { $gte: new Date(startDate) };
+        }
+
+        if (endDate) {
+            query.publishedDate = query.publishedDate || {};
+            query.publishedDate.$lte = new Date(endDate);
+        }
+
+        const books = await Book.find(query);
         res.json(books);
     } catch (error) {
         res.status(500).json({ message: error.message });

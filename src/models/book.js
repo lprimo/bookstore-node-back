@@ -12,13 +12,7 @@ const bookSchema = new mongoose.Schema({
     isbn: {
         type: String,
         required: true,
-        unique: true,
-        validate: {
-            validator: function (v) {
-                return /^(97(8|9))?\d{9}(\d|X)$/.test(v);
-            },
-            message: props => `${props.value} is not a valid ISBN number!`
-        }
+        unique: true
     },
     publishedDate: {
         type: Date,
