@@ -1,6 +1,5 @@
 const User = require('../models/user');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 
 // Register a new user
@@ -20,7 +19,7 @@ exports.registerUser = async (req, res) => {
         }
 
         // Create a new user
-        const user = new User({ name, email, password, role });
+        const user = new User({ name, email, password: password, role });
         await user.save();
 
         res.status(201).json(user);
@@ -54,7 +53,7 @@ exports.getUserById = async (req, res) => {
     }
 };
 
-// Update user by ID
+// Update user by ID (partial update)
 exports.updateUser = async (req, res) => {
     const { id } = req.params;
     const { name, email, password, role } = req.body;
@@ -82,13 +81,12 @@ exports.deleteUser = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const user = await User.findById(id);
+        const user = await User.findByIdAndDelete(id);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        await user.remove();
-        res.json({ message: 'User removed' });
+        res.json({ message: `User removed: ${user.name}` });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

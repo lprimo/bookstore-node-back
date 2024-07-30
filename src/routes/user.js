@@ -13,8 +13,8 @@ router.get('/', authMiddleware, adminMiddleware, UserController.getAllUsers);
 // Get user by ID (protected route, admin only)
 router.get('/:id', authMiddleware, adminMiddleware, UserController.getUserById);
 
-// Update user by ID (protected route, admin only)
-router.put('/:id', authMiddleware, adminMiddleware, validateUser, UserController.updateUser);
+// Update user by ID (partial update, protected route, admin only)
+router.patch('/:id', authMiddleware, adminMiddleware, validateUser, UserController.updateUser);
 
 // Delete user by ID (protected route, admin only)
 router.delete('/:id', authMiddleware, adminMiddleware, UserController.deleteUser);
