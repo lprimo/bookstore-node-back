@@ -21,7 +21,7 @@ bookstore/
 │    ├── models/
 │    │   ├── book.js
 │    │   └── user.js
-│    └── routes/
+│    ├── routes/
 │    │   ├── auth.js
 │    │   ├── books.js
 │    │   └── user.js

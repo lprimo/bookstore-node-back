@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon src/app.js",
     "dev": "nodemon src/app.js",
-    "test": "npm test"
+    "test": "jest",
+    "test:watch": "jest --watch"
   },
   "author": "Luis Primo",
   "license": "ISC",
@@ -19,6 +20,8 @@
     "mongoose": "^8.5.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.4",
+    "supertest": "^7.0.0"
   }
 }
