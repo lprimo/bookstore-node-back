@@ -10,13 +10,16 @@ exports.getAllBooks = async (req, res) => {
 };
 
 exports.createBook = async (req, res) => {
-    const { title, author, isbn, publishedDate, pages } = req.body;
+    const { title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity } = req.body;
     const book = new Book({
         title,
         author,
         isbn,
         publishedDate,
         pages,
+        saleValue,
+        rentalValue,
+        quantity
     });
 
     try {
@@ -29,7 +32,7 @@ exports.createBook = async (req, res) => {
 
 exports.updateBook = async (req, res) => {
     const { id } = req.params;
-    const { title, author, isbn, publishedDate, pages } = req.body;
+    const { title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity } = req.body;
 
     try {
         const book = await Book.findById(id);
@@ -42,6 +45,9 @@ exports.updateBook = async (req, res) => {
         if (isbn) book.isbn = isbn;
         if (publishedDate) book.publishedDate = publishedDate;
         if (pages) book.pages = pages;
+        if (saleValue) book.saleValue = saleValue;
+        if (rentalValue) book.rentalValue = rentalValue;
+        if (quantity) book.quantity = quantity;
 
         await book.save();
         res.json(book);

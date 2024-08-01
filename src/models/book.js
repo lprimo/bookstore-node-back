@@ -22,6 +22,17 @@ const bookSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
+    saleValue: {
+        type: Number
+    },
+    rentalValue: {
+        type: Number
+    },
+    quantity: {
+        type: Number,
+        default: 1,
+        required: true,
+    }
 });
 
 module.exports = mongoose.model('Book', bookSchema);
