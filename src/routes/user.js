@@ -4,19 +4,19 @@ const UserController = require('../controllers/userController');
 const { authMiddleware, adminMiddleware } = require('../middleware/authMiddleware');
 const { validateUser } = require('../utils/validators');
 
-// Register a new user (protected route, admin only)
+// Cadastrar um novo usuário ('rota protegida, somente administrador')
 router.post('/register', authMiddleware, adminMiddleware, validateUser, UserController.registerUser);
 
-// Get all users (protected route, admin only)
+// Obter todos os usuários ('rota protegida, somente administrador')
 router.get('/', authMiddleware, adminMiddleware, UserController.getAllUsers);
 
-// Get user by ID (protected route, admin only)
+// Ober usuário por ID ('rota protegida, somente administrador')
 router.get('/:id', authMiddleware, adminMiddleware, UserController.getUserById);
 
-// Update user by ID (partial update, protected route, admin only)
+// Atualizar usuário por ID (atualização parcial, 'rota protegida, somente administrador')
 router.patch('/:id', authMiddleware, adminMiddleware, validateUser, UserController.updateUser);
 
-// Delete user by ID (protected route, admin only)
+// Deletar usuário por ID ('rota protegida, somente administrador')
 router.delete('/:id', authMiddleware, adminMiddleware, UserController.deleteUser);
 
 module.exports = router;

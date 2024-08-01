@@ -2,7 +2,6 @@ const Customer = require('../models/customer');
 const bcrypt = require('bcrypt');
 const { validationResult } = require('express-validator');
 
-// Registrar um novo cliente
 exports.registerCustomer = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -37,7 +36,6 @@ exports.registerCustomer = async (req, res) => {
     }
 };
 
-// Obter todos os clientes
 exports.getAllCustomers = async (req, res) => {
     try {
         const customers = await Customer.find();
@@ -47,7 +45,6 @@ exports.getAllCustomers = async (req, res) => {
     }
 };
 
-// Obter cliente por ID
 exports.getCustomerById = async (req, res) => {
     const { id } = req.params;
 
@@ -62,7 +59,6 @@ exports.getCustomerById = async (req, res) => {
     }
 };
 
-// Atualizar cliente por ID
 exports.updateCustomer = async (req, res) => {
     const { id } = req.params;
     const { name, cpfCnpj, birthDate, address, telephone, email, password, civilStatus, profession, image } = req.body;
@@ -91,7 +87,6 @@ exports.updateCustomer = async (req, res) => {
     }
 };
 
-// Deletar cliente por ID
 exports.deleteCustomer = async (req, res) => {
     const { id } = req.params;
 
