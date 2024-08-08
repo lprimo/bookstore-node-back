@@ -1,8 +1,9 @@
 const Book = require('../models/book');
+const ImageBook = require('../models/imageBook');
 
 exports.getAllBooks = async (req, res) => {
     try {
-        const books = await Book.find();
+        const books = await Book.find().populate('images');
         res.json(books);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -10,29 +11,28 @@ exports.getAllBooks = async (req, res) => {
 };
 
 exports.createBook = async (req, res) => {
-    const { title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity } = req.body;
-    const book = new Book({
-        title,
-        author,
-        isbn,
-        publishedDate,
-        pages,
-        saleValue,
-        rentalValue,
-        quantity
-    });
-
+    const { title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity, images } = req.body;
+    const book = new Book({ title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity });
     try {
         const newBook = await book.save();
+        if (images && images.length > 0) {
+            const imagePromises = images.map(img => {
+                const newImage = new ImageBook({ book: newBook._id, image: img.image, description: img?.description, order: img.order });
+                return newImage.save();
+            });
+            const savedImages = await Promise.all(imagePromises);
+            newBook.images = savedImages.map(image => image._id);
+            await newBook.save();
+        }
         res.status(201).json(newBook);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 
-exports.updateBook = async (req, res) => {
+exports.updateBookAndImages = async (req, res) => {
     const { id } = req.params;
-    const { title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity } = req.body;
+    const { title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity, images } = req.body;
 
     try {
         const book = await Book.findById(id);
@@ -48,9 +48,29 @@ exports.updateBook = async (req, res) => {
         if (saleValue) book.saleValue = saleValue;
         if (rentalValue) book.rentalValue = rentalValue;
         if (quantity) book.quantity = quantity;
-
         await book.save();
-        res.json(book);
+
+        if (images && Array.isArray(images)) {
+            const updatePromises = images.map(async (img) => {
+                const { id, image, description, order } = img;
+                const imageBook = await ImageBook.findById(id);
+
+                if (!imageBook) {
+                    throw new Error(`Image with id ${id} not found`);
+                }
+
+                if (image) imageBook.image = image;
+                if (description) imageBook.description = description;
+                if (order) imageBook.order = order;
+
+                return imageBook.save();
+            });
+
+            const updatedImages = await Promise.all(updatePromises);
+            res.json({ book, updatedImages });
+        } else {
+            res.json(book);
+        }
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
@@ -60,7 +80,7 @@ exports.getBookById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const book = await Book.findById(id);
+        const book = await Book.findById(id).populate('images');
         if (!book) {
             return res.status(404).json({ message: 'Book not found' });
         }
@@ -74,7 +94,7 @@ exports.getBooksByTitle = async (req, res) => {
     const { title } = req.params;
 
     try {
-        const books = await Book.find({ title: new RegExp(title, 'i') });
+        const books = await Book.find({ title: new RegExp(title, 'i') }).populate('images');
         if (!books.length) {
             return res.status(404).json({ message: 'No books found with the given title' });
         }
@@ -88,7 +108,7 @@ exports.getBooksByAuthor = async (req, res) => {
     const { author } = req.params;
 
     try {
-        const books = await Book.find({ author: new RegExp(author, 'i') });
+        const books = await Book.find({ author: new RegExp(author, 'i') }).populate('images');
         if (!books.length) {
             return res.status(404).json({ message: 'No books found with the given author' });
         }
@@ -113,8 +133,23 @@ exports.filterBooksByDate = async (req, res) => {
             query.publishedDate.$lte = new Date(endDate);
         }
 
-        const books = await Book.find(query);
+        const books = await Book.find(query).populate('images');
         res.json(books);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.deleteImage = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const image = await ImageBook.findByIdAndDelete(id);
+        if (!image) {
+            return res.status(404).json({ message: 'Image id not found' });
+        }
+
+        res.json({ message: `Deleted image` });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

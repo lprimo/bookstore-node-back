@@ -21,7 +21,7 @@ router.get('/', BookController.getAllBooks);
 router.post('/', authMiddleware, BookController.createBook);
 
 // Atualizar livro por ID (rota protegida)
-router.patch('/:id', authMiddleware, BookController.updateBook);
+router.patch('/:id', authMiddleware, BookController.updateBookAndImages);
 
 // Obter livro por ID (rota protegida)
 router.get('/:id', authMiddleware, BookController.getBookById);

@@ -32,7 +32,11 @@ const bookSchema = new mongoose.Schema({
         type: Number,
         default: 1,
         required: true,
-    }
+    },
+    images: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'ImageBook'
+    }]
 });
 
 module.exports = mongoose.model('Book', bookSchema);
