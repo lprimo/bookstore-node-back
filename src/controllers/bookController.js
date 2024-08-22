@@ -5,7 +5,14 @@ const ImageBook = require('../models/imageBook');
 exports.getAllBooks = async (req, res) => {
     try {
         const books = await Book.find().populate('images');
-        res.json(books);
+        const availableBooks = await Promise.all(books.map(async (book) => {
+            const rentedCount = await Rental.countDocuments({ book: book._id, status: 'rented' });
+            return {
+                ...book.toObject(),
+                availableQuantity: book.quantity - rentedCount
+            };
+        }));
+        res.json(availableBooks);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -99,7 +106,14 @@ exports.getBooksByTitle = async (req, res) => {
         if (!books.length) {
             return res.status(404).json({ message: 'No books found with the given title' });
         }
-        res.json(books);
+        const availableBooks = await Promise.all(books.map(async (book) => {
+            const rentedCount = await Rental.countDocuments({ book: book._id, status: 'rented' });
+            return {
+                ...book.toObject(),
+                availableQuantity: book.quantity - rentedCount
+            };
+        }));
+        res.json(availableBooks);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -113,7 +127,14 @@ exports.getBooksByAuthor = async (req, res) => {
         if (!books.length) {
             return res.status(404).json({ message: 'No books found with the given author' });
         }
-        res.json(books);
+        const availableBooks = await Promise.all(books.map(async (book) => {
+            const rentedCount = await Rental.countDocuments({ book: book._id, status: 'rented' });
+            return {
+                ...book.toObject(),
+                availableQuantity: book.quantity - rentedCount
+            };
+        }));
+        res.json(availableBooks);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -135,7 +156,14 @@ exports.filterBooksByDate = async (req, res) => {
         }
 
         const books = await Book.find(query).populate('images');
-        res.json(books);
+        const availableBooks = await Promise.all(books.map(async (book) => {
+            const rentedCount = await Rental.countDocuments({ book: book._id, status: 'rented' });
+            return {
+                ...book.toObject(),
+                availableQuantity: book.quantity - rentedCount
+            };
+        }));
+        res.json(availableBooks);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
