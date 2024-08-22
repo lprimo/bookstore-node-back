@@ -1,5 +1,5 @@
 const Customer = require('../models/customer');
-const bcrypt = require('bcrypt');
+const Rental = require('../models/rental');
 const { validationResult } = require('express-validator');
 
 exports.registerCustomer = async (req, res) => {
@@ -91,6 +91,11 @@ exports.deleteCustomer = async (req, res) => {
     const { id } = req.params;
 
     try {
+        const rental = await Rental.findOne({ customer: id });
+        if (rental) {
+            return res.status(400).json({ message: 'Rental found for the given customer ID' });
+        }
+
         const customer = await Customer.findByIdAndDelete(id);
         if (!customer) {
             return res.status(404).json({ message: 'Customer not found' });

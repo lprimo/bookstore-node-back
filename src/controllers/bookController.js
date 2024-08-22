@@ -1,4 +1,5 @@
 const Book = require('../models/book');
+const Rental = require('../models/rental');
 const ImageBook = require('../models/imageBook');
 
 exports.getAllBooks = async (req, res) => {
@@ -150,6 +151,30 @@ exports.deleteImage = async (req, res) => {
         }
 
         res.json({ message: `Deleted image` });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.deleteBook = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const rental = await Rental.findOne({ book: id });
+        if (rental) {
+            return res.status(400).json({ message: 'Rental found for the given book ID' });
+        }
+
+        const book = await Book.findById(id);
+        if (!book) {
+            return res.status(404).json({ message: 'Book not found' });
+        }
+
+        await ImageBook.deleteMany({ book: id });
+
+        await book.remove();
+
+        res.json({ message: 'Book and associated images deleted successfully' });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

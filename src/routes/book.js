@@ -26,6 +26,10 @@ router.patch('/:id', authMiddleware, BookController.updateBookAndImages);
 // Obter livro por ID (rota protegida)
 router.get('/:id', authMiddleware, BookController.getBookById);
 
-// Falta delete - por conta do rental e outras regras de negocio
+// Deletar imagem por ID (rota protegida)
+router.get('/images/:id', authMiddleware, BookController.deleteImage);
+
+// Deletar livro por ID (rota protegida)
+router.get('/:id', authMiddleware, BookController.deleteBook);
 
 module.exports = router;
