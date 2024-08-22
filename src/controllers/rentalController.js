@@ -1,16 +1,31 @@
 const Rental = require('../models/rental');
 const Book = require('../models/book');
 const Customer = require('../models/customer');
+const Joi = require('joi');
+
+// Schemas de validação
+const rentalSchema = Joi.object({
+    bookId: Joi.string().required(),
+    customerId: Joi.string().required(),
+    dueDate: Joi.date().required(),
+    returnedAt: Joi.date().optional(),
+    status: Joi.string().optional()
+});
 
 exports.registerRental = async (req, res) => {
-    const { bookId, customerId, dueDate } = req.body;
+    const { error, value } = rentalSchema.validate(req.body);
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const { bookId, customerId, dueDate } = value;
 
     try {
-        const book = await Book.findById(bookId);
+        const book = await Book.findById(bookId).lean();
         if (!book) {
             return res.status(404).json({ message: 'Book not found' });
         }
-        const customer = await Customer.findById(customerId);
+        const customer = await Customer.findById(customerId).lean();
         if (!customer) {
             return res.status(404).json({ message: 'Customer not found' });
         }
@@ -21,7 +36,7 @@ exports.registerRental = async (req, res) => {
             dueDate,
         });
 
-        await Rental.save();
+        await rental.save();
         res.status(201).json(rental);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -30,7 +45,7 @@ exports.registerRental = async (req, res) => {
 
 exports.getAllRental = async (req, res) => {
     try {
-        const rentals = await Rental.find().populate('book');
+        const rentals = await Rental.find().populate('book').lean();
         res.json(rentals);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -41,7 +56,7 @@ exports.getRentalById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const rental = await Rental.findById(id).populate('book');
+        const rental = await Rental.findById(id).populate('book').lean();
         if (!rental) {
             return res.status(404).json({ message: 'Rental not found' });
         }
@@ -53,7 +68,12 @@ exports.getRentalById = async (req, res) => {
 
 exports.updateRental = async (req, res) => {
     const { id } = req.params;
-    const { returnedAt, status } = req.body;
+    const { error, value } = rentalSchema.validate(req.body, { allowUnknown: true });
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const { returnedAt, status } = value;
 
     try {
         const rental = await Rental.findById(id);
@@ -75,7 +95,7 @@ exports.deleteRental = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const rental = await Rental.findByIdAndDelete(id);
+        const rental = await Rental.findByIdAndDelete(id).lean();
         if (!rental) {
             return res.status(404).json({ message: 'Rental not found' });
         }

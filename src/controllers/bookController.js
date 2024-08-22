@@ -1,14 +1,34 @@
 const Book = require('../models/book');
 const Rental = require('../models/rental');
 const ImageBook = require('../models/imageBook');
+const Joi = require('joi');
+
+// Schemas de validação
+const bookSchema = Joi.object({
+    title: Joi.string().required(),
+    author: Joi.string().required(),
+    isbn: Joi.string().required(),
+    publishedDate: Joi.date().required(),
+    pages: Joi.number().integer().required(),
+    saleValue: Joi.number().required(),
+    rentalValue: Joi.number().required(),
+    quantity: Joi.number().integer().required(),
+    images: Joi.array().items(Joi.object({
+        image: Joi.string().required(),
+        description: Joi.string().optional(),
+        order: Joi.number().integer().required()
+    })).optional()
+});
+
+const idSchema = Joi.string().regex(/^[0-9a-fA-F]{24}$/);
 
 exports.getAllBooks = async (req, res) => {
     try {
-        const books = await Book.find().populate('images');
+        const books = await Book.find().populate('images').lean();
         const availableBooks = await Promise.all(books.map(async (book) => {
             const rentedCount = await Rental.countDocuments({ book: book._id, status: 'rented' });
             return {
-                ...book.toObject(),
+                ...book,
                 availableQuantity: book.quantity - rentedCount
             };
         }));
@@ -19,7 +39,11 @@ exports.getAllBooks = async (req, res) => {
 };
 
 exports.createBook = async (req, res) => {
-    const { title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity, images } = req.body;
+    const { error, value } = bookSchema.validate(req.body);
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message });
+    }
+    const { title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity, images } = value;
     const book = new Book({ title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity });
     try {
         const newBook = await book.save();
@@ -40,7 +64,15 @@ exports.createBook = async (req, res) => {
 
 exports.updateBookAndImages = async (req, res) => {
     const { id } = req.params;
-    const { title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity, images } = req.body;
+    const { error: idError } = idSchema.validate(id);
+    if (idError) {
+        return res.status(400).json({ message: 'Invalid book ID' });
+    }
+    const { error, value } = bookSchema.validate(req.body, { allowUnknown: true });
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message });
+    }
+    const { title, author, isbn, publishedDate, pages, saleValue, rentalValue, quantity, images } = value;
 
     try {
         const book = await Book.findById(id);
@@ -86,9 +118,13 @@ exports.updateBookAndImages = async (req, res) => {
 
 exports.getBookById = async (req, res) => {
     const { id } = req.params;
+    const { error } = idSchema.validate(id);
+    if (error) {
+        return res.status(400).json({ message: 'Invalid book ID' });
+    }
 
     try {
-        const book = await Book.findById(id).populate('images');
+        const book = await Book.findById(id).populate('images').lean();
         if (!book) {
             return res.status(404).json({ message: 'Book not found' });
         }
@@ -102,14 +138,14 @@ exports.getBooksByTitle = async (req, res) => {
     const { title } = req.params;
 
     try {
-        const books = await Book.find({ title: new RegExp(title, 'i') }).populate('images');
+        const books = await Book.find({ title: new RegExp(title, 'i') }).populate('images').lean();
         if (!books.length) {
             return res.status(404).json({ message: 'No books found with the given title' });
         }
         const availableBooks = await Promise.all(books.map(async (book) => {
             const rentedCount = await Rental.countDocuments({ book: book._id, status: 'rented' });
             return {
-                ...book.toObject(),
+                ...book,
                 availableQuantity: book.quantity - rentedCount
             };
         }));
@@ -123,14 +159,14 @@ exports.getBooksByAuthor = async (req, res) => {
     const { author } = req.params;
 
     try {
-        const books = await Book.find({ author: new RegExp(author, 'i') }).populate('images');
+        const books = await Book.find({ author: new RegExp(author, 'i') }).populate('images').lean();
         if (!books.length) {
             return res.status(404).json({ message: 'No books found with the given author' });
         }
         const availableBooks = await Promise.all(books.map(async (book) => {
             const rentedCount = await Rental.countDocuments({ book: book._id, status: 'rented' });
             return {
-                ...book.toObject(),
+                ...book,
                 availableQuantity: book.quantity - rentedCount
             };
         }));
@@ -155,11 +191,11 @@ exports.filterBooksByDate = async (req, res) => {
             query.publishedDate.$lte = new Date(endDate);
         }
 
-        const books = await Book.find(query).populate('images');
+        const books = await Book.find(query).populate('images').lean();
         const availableBooks = await Promise.all(books.map(async (book) => {
             const rentedCount = await Rental.countDocuments({ book: book._id, status: 'rented' });
             return {
-                ...book.toObject(),
+                ...book,
                 availableQuantity: book.quantity - rentedCount
             };
         }));
@@ -171,6 +207,10 @@ exports.filterBooksByDate = async (req, res) => {
 
 exports.deleteImage = async (req, res) => {
     const { id } = req.params;
+    const { error } = idSchema.validate(id);
+    if (error) {
+        return res.status(400).json({ message: 'Invalid image ID' });
+    }
 
     try {
         const image = await ImageBook.findByIdAndDelete(id);
@@ -186,6 +226,10 @@ exports.deleteImage = async (req, res) => {
 
 exports.deleteBook = async (req, res) => {
     const { id } = req.params;
+    const { error } = idSchema.validate(id);
+    if (error) {
+        return res.status(400).json({ message: 'Invalid book ID' });
+    }
 
     try {
         const rental = await Rental.findOne({ book: id });

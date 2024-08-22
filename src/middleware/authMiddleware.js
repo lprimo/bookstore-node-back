@@ -1,4 +1,12 @@
 const jwt = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
+
+// Rate Limiting para proteger contra ataques de força bruta
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 100, // Limite de 100 requisições por IP
+    message: 'Too many requests from this IP, please try again after 15 minutes'
+});
 
 const authMiddleware = (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -22,4 +30,4 @@ const adminMiddleware = (req, res, next) => {
     next();
 };
 
-module.exports = { authMiddleware, adminMiddleware };
+module.exports = { authMiddleware, adminMiddleware, authLimiter };

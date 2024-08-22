@@ -1,24 +1,29 @@
 const User = require('../models/user');
 const { validationResult } = require('express-validator');
+const Joi = require('joi');
 
-// Register a new user
+const userSchema = Joi.object({
+    name: Joi.string().required(),
+    email: Joi.string().email().required(),
+    password: Joi.string().required(),
+    role: Joi.string().optional()
+});
+
 exports.registerUser = async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+    const { error, value } = userSchema.validate(req.body);
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message });
     }
 
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role } = value;
 
     try {
-        // Check if user already exists
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ email }).lean();
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
 
-        // Create a new user
-        const user = new User({ name, email, password: password, role });
+        const user = new User({ name, email, password, role });
         await user.save();
 
         res.status(201).json(user);
@@ -27,22 +32,20 @@ exports.registerUser = async (req, res) => {
     }
 };
 
-// Get all users
 exports.getAllUsers = async (req, res) => {
     try {
-        const users = await User.find();
+        const users = await User.find().lean();
         res.json(users);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// Get user by ID
 exports.getUserById = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const user = await User.findById(id);
+        const user = await User.findById(id).lean();
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -52,10 +55,14 @@ exports.getUserById = async (req, res) => {
     }
 };
 
-// Update user by ID (partial update)
 exports.updateUser = async (req, res) => {
     const { id } = req.params;
-    const { name, email, password, role } = req.body;
+    const { error, value } = userSchema.validate(req.body, { allowUnknown: true });
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const { name, email, password, role } = value;
 
     try {
         const user = await User.findById(id);
@@ -75,12 +82,11 @@ exports.updateUser = async (req, res) => {
     }
 };
 
-// Delete user by ID
 exports.deleteUser = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const user = await User.findByIdAndDelete(id);
+        const user = await User.findByIdAndDelete(id).lean();
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }

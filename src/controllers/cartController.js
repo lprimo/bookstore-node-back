@@ -1,10 +1,29 @@
 const Cart = require('../models/cart');
 const Book = require('../models/book');
+const Joi = require('joi');
+
+// Schemas de validação
+const addToCartSchema = Joi.object({
+    customerId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    bookId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    quantity: Joi.number().integer().min(1).required(),
+    type: Joi.string().valid('sale', 'rental').required()
+});
+
+const removeFromCartSchema = Joi.object({
+    customerId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    bookId: Joi.string().regex(/^[0-9a-fA-F]{24}$/).required(),
+    type: Joi.string().valid('sale', 'rental').required()
+});
 
 exports.addToCart = async (req, res) => {
-    const { customerId, bookId, quantity, type } = req.body;
+    const { error, value } = addToCartSchema.validate(req.body);
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message });
+    }
+    const { customerId, bookId, quantity, type } = value;
     try {
-        const book = await Book.findById(bookId);
+        const book = await Book.findById(bookId).lean();
         if (!book) {
             return res.status(404).json({ message: 'Book not found' });
         }
@@ -28,7 +47,11 @@ exports.addToCart = async (req, res) => {
 };
 
 exports.removeFromCart = async (req, res) => {
-    const { customerId, bookId, type } = req.params;
+    const { error, value } = removeFromCartSchema.validate(req.params);
+    if (error) {
+        return res.status(400).json({ message: error.details[0].message });
+    }
+    const { customerId, bookId, type } = value;
     try {
         let cart = await Cart.findOne({ customer: customerId });
         if (!cart) {
@@ -46,7 +69,7 @@ exports.removeFromCart = async (req, res) => {
 exports.getCart = async (req, res) => {
     const { customerId } = req.params;
     try {
-        const cart = await Cart.findOne({ customer: customerId }).populate('items.book');
+        const cart = await Cart.findOne({ customer: customerId }).populate('items.book').lean();
         if (!cart) {
             return res.status(404).json({ message: 'Cart not found' });
         }
