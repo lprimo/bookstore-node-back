@@ -6,6 +6,7 @@ const userRoutes = require('./routes/user');
 const authRoutes = require('./routes/auth');
 const rentalRoutes = require('./routes/rental');
 const customerRoutes = require('./routes/customer');
+const cartRoutes = require('./routes/cart');
 
 dotenv.config();
 
@@ -25,3 +26,4 @@ app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/rental', rentalRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/carts', cartRoutes);
